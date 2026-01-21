@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dongle Testing Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .selection-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .selection-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .selection-item {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .selection-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .selection-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .selection-item label {
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.95em;
+        }
+        
+        .selection-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .table-section {
+            padding: 30px;
+            display: none;
+        }
+        
+        .table-section.active {
+            display: block;
+        }
+        
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .btn-refresh {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-refresh:hover {
+            background: #218838;
+        }
+        
+        .btn-download {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background: #c82333;
+        }
+        
+        .btn-back {
+            background: #020303;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #000000;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tbody tr {
+            transition: background 0.3s ease;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .speed-data {
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dongle Testing Report</h1>
+            <p>👽Akash Chauhan👽</p>
+        </div>
+        
+        <div class="selection-section" id="selectionSection">
+            <h2 class="selection-title">Select Plates to Track</h2>
+            <div class="selection-grid" id="selectionGrid"></div>
+            <div class="selection-actions">
+                <button class="btn btn-primary" onclick="selectAll()">Select All</button>
+                <button class="btn btn-secondary" onclick="deselectAll()">Deselect All</button>
+                <button class="btn btn-primary" onclick="generateTable()">Generate Table</button>
+            </div>
+            <div class="selection-actions">
+                <button class="btn btn-primary" onclick="generateTableShuffled()" style="background: #ff6b6b;">🔀 Generate Shuffled Table</button>
+            </div>
+        </div>
+        
+        <div class="table-section" id="tableSection">
+            <div class="table-controls">
+                <button class="btn btn-back" onclick="goBack()">← Back to Selection</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-refresh" onclick="refreshData()">🔄 Refresh Data</button>
+                    <button class="btn btn-download" onclick="downloadPDF()">📥 Download PDF</button>
+                </div>
+            </div>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Plate No.</th>
+                        <th>Dongle No.</th>
+                        <th>Download Speed (Mbps)</th>
+                        <th>Upload Speed (Mbps)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const vehicleData = [
+            { plate: "DL2CAX5328", dongle: "7678379062" },
+            { plate: "DL2CAY0403", dongle: "7678379099" },
+            { plate: "DL2CAY0441", dongle: "7678379113" },
+            { plate: "DL2CAY0466", dongle: "7678379072" },
+            { plate: "DL3CCX2947", dongle: "7678379110" },
+            { plate: "DL1CAG7908", dongle: "7678379097" },
+            { plate: "DL1CAG7911", dongle: "7678379070" },
+            { plate: "DL1CAG7924", dongle: "7678379115" },
+            { plate: "DL10CZ8513", dongle: "7678379126" },
+            { plate: "DL10CZ8622", dongle: "7678379073" },
+            { plate: "DL8CBE3438", dongle: "7678379051" },
+            { plate: "DL8CBE3488", dongle: "7678379118" },
+            { plate: "DL6CT6134", dongle: "7678379106" },
+            { plate: "DL6CT6189", dongle: "7678379112" },
+            { plate: "DL6CT8016", dongle: "7678379105" },
+            { plate: "DL6CT8032", dongle: "7678379080" },
+            { plate: "DL6CT8043", dongle: "7678379119" },
+            { plate: "DL6CT8075", dongle: "7678379085" },
+            { plate: "DL3CCP7006", dongle: "7678379090" },
+            { plate: "DL3CCP7057", dongle: "9311077041" },
+            { plate: "DL1GD2349", dongle: "9311076782" },
+            { plate: "DL1GD2361", dongle: "9311076959" },
+            { plate: "DL1CAJ8632", dongle: "9311076876" },
+            { plate: "DL1CAJ8633", dongle: "9311076901" },
+            { plate: "DL1CAJ8673", dongle: "9311077175" }
+        ];
+
+        let selectedIndices = [];
+        let tableData = [];
+
+        function initializeSelection() {
+            const grid = document.getElementById('selectionGrid');
+            vehicleData.forEach((vehicle, index) => {
+                const item = document.createElement('div');
+                item.className = 'selection-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="vehicle${index}" value="${index}" onchange="toggleSelection(${index})">
+                    <label for="vehicle${index}">${vehicle.plate} / ${vehicle.dongle}</label>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function toggleSelection(index) {
+            const checkbox = document.getElementById(`vehicle${index}`);
+            if (checkbox.checked) {
+                if (!selectedIndices.includes(index)) {
+                    selectedIndices.push(index);
+                }
+            } else {
+                selectedIndices = selectedIndices.filter(i => i !== index);
+            }
+            selectedIndices.sort((a, b) => a - b);
+        }
+
+        function selectAll() {
+            selectedIndices = [];
+            vehicleData.forEach((_, index) => {
+                document.getElementById(`vehicle${index}`).checked = true;
+                selectedIndices.push(index);
+            });
+        }
+
+        function deselectAll() {
+            selectedIndices = [];
+            vehicleData.forEach((_, index) => {
+                document.getElementById(`vehicle${index}`).checked = false;
+            });
+        }
+
+        function generateRandomSpeed(min, max) {
+            return (Math.random() * (max - min) + min).toFixed(2);
+        }
+
+        function generateTable() {
+            if (selectedIndices.length === 0) {
+                alert('Please select at least one vehicle!');
+                return;
+            }
+
+            tableData = selectedIndices.map((index, sno) => ({
+                sno: sno + 1,
+                plateNo: vehicleData[index].plate,
+                dongleNo: vehicleData[index].dongle,
+                download: generateRandomSpeed(26.01, 51.99),
+                upload: generateRandomSpeed(6.01, 12.99)
+            }));
+
+            updateTable();
+            document.getElementById('selectionSection').style.display = 'none';
+            document.getElementById('tableSection').classList.add('active');
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function generateTableShuffled() {
+            if (selectedIndices.length === 0) {
+                alert('Please select at least one vehicle!');
+                return;
+            }
+
+            const shuffledIndices = shuffleArray(selectedIndices);
+
+            tableData = shuffledIndices.map((index, sno) => ({
+                sno: sno + 1,
+                plateNo: vehicleData[index].plate,
+                dongleNo: vehicleData[index].dongle,
+                download: generateRandomSpeed(26.01, 51.99),
+                upload: generateRandomSpeed(6.01, 12.99)
+            }));
+
+            updateTable();
+            document.getElementById('selectionSection').style.display = 'none';
+            document.getElementById('tableSection').classList.add('active');
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            tableData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.sno}</td>
+                    <td>${row.plateNo}</td>
+                    <td>${row.dongleNo}</td>
+                    <td class="speed-data">${row.download}</td>
+                    <td class="speed-data">${row.upload}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function refreshData() {
+            tableData = tableData.map(row => ({
+                ...row,
+                download: generateRandomSpeed(26.01, 51.99),
+                upload: generateRandomSpeed(6.01, 12.99)
+            }));
+            updateTable();
+        }
+
+        function goBack() {
+            document.getElementById('tableSection').classList.remove('active');
+            document.getElementById('selectionSection').style.display = 'block';
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            doc.setFont('times', 'bold');
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Dongle Testing Report", 105, 12, { align: 'center' });
+            
+            doc.setFont('times', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 105, 18, { align: 'center' });
+
+            const tableColumn = ["S.No.", "Plate No.", "Dongle No.", "Download Speed\n(Mbps)", "Upload Speed\n(Mbps)"];
+            const tableRows = tableData.map(row => [
+                row.sno,
+                row.plateNo,
+                row.dongleNo,
+                row.download,
+                row.upload
+            ]);
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 24,
+                theme: 'grid',
+                styles: {
+                    font: 'times',
+                    fontSize: 10,
+                    cellPadding: 2,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.3
+                },
+                headStyles: {
+                    fillColor: [211, 211, 211],
+                    textColor: [0, 0, 0],
+                    fontSize: 12,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                    valign: 'middle',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.3,
+                    minCellHeight: 8
+                },
+                bodyStyles: {
+                    fontSize: 11,
+                    fontStyle: 'normal',
+                    textColor: [0, 0, 0],
+                    halign: 'center',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.3,
+                    minCellHeight: 8
+                },
+
+                margin: { top: 23, left: 10, right: 10, bottom: 10 },
+                tableWidth: 'auto'
+            });
+
+            doc.save('Dongle_testing_report.pdf');
+        }
+
+        initializeSelection();
+    </script>
+</body>
+</html>
