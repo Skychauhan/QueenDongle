@@ -345,7 +345,7 @@
                 sno: sno + 1,
                 plateNo: vehicleData[index].plate,
                 dongleNo: vehicleData[index].dongle,
-                download: generateRandomSpeed(26.01, 51.99),
+                download: generateRandomSpeed(26.01, ),
                 upload: generateRandomSpeed(6.01, 12.99)
             }));
 
@@ -375,7 +375,7 @@
                 sno: sno + 1,
                 plateNo: vehicleData[index].plate,
                 dongleNo: vehicleData[index].dongle,
-                download: generateRandomSpeed(26.01, 51.99),
+                download: generateRandomSpeed(26.01, 46.99),
                 upload: generateRandomSpeed(6.01, 12.99)
             }));
 
@@ -404,7 +404,7 @@
         function refreshData() {
             tableData = tableData.map(row => ({
                 ...row,
-                download: generateRandomSpeed(26.01, 51.99),
+                download: generateRandomSpeed(26.01, 46.99),
                 upload: generateRandomSpeed(6.01, 12.99)
             }));
             updateTable();
